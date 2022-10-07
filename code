@@ -1,0 +1,400 @@
+import { action, makeObservable, observable } from 'mobx'
+import { get, map, flatten, forEach } from 'lodash'
+
+import { log } from '../../config/AppConfig'
+
+import { NetworkCallbacks } from '../../common-library/api-layer'
+import { API_IDS } from '../../common'
+import { BaseRequest } from '../../common-library/http-layer'
+
+import { HomeNetworkModule } from '../../api-layer'
+import { GLOBAL_SEARCH_TEST_TABLE_HEADER, GLOBAL_SEARRCH_TEST_TABLE_KEYS, userDataStore } from '..'
+
+const DEFAULT_SETTING = {
+    selectedItem: null,
+    testCardData: [],
+    allGoals: [],
+    fetchingStatus: true,
+    searchForRelatedTopic: [],
+    testCardTableData: []
+}
+
+export class GlobalSearchChapterConceptTestStore implements NetworkCallbacks {
+    @observable selectedItem
+    @observable allGoals
+    @observable fetchingStatus
+    @observable searchForRelatedTopic
+    @observable testCardData
+    @observable testCardTableData
+
+    constructor() {
+        this.init()
+        makeObservable(this)
+    }
+
+    @action
+    init = () => {
+        Object.keys(DEFAULT_SETTING).forEach((key) => (this[key] = DEFAULT_SETTING[key]))
+    }
+
+    @action
+    setConceptChepterItem = (item) => {
+        log('shhashiranjan============',item)
+        this.selectedItem = item
+    }
+
+    @action
+    getConceptChepterItem = (item) => {
+        return this.selectedItem
+    }
+
+
+
+
+
+    @action
+    selectCard = (id, testType) => {
+        let newTestCardData = {}
+        if (testType === 'chapter') {
+            const newChapterData = map(this.testCardData?.chapter, elememt => {
+                if (id === get(elememt, 'test.id')) {
+                    return {
+                        ...elememt, selected: !get(elememt, 'selected')
+                    }
+                }
+                return elememt
+            })
+            newTestCardData = { ...this.testCardData, chapter: newChapterData }
+        }
+
+        else if (testType === 'concept') {
+            const newConceptData = map(this.testCardData?.concept, elememt => {
+                if (id === get(elememt, 'test.id')) {
+                    return {
+                        ...elememt, selected: !get(elememt, 'selected')
+                    }
+                }
+                return elememt
+            })
+            newTestCardData = { ...this.testCardData, concept: newConceptData }
+        }
+
+        else if (testType === 'others') {
+            const newOtherData = map(this.testCardData?.others, elememt => {
+                if (id === get(elememt, 'test.id')) {
+                    return {
+                        ...elememt, selected: !get(elememt, 'selected')
+                    }
+                }
+                return elememt
+            })
+            newTestCardData = { ...this.testCardData, others: newOtherData }
+        }
+        this.testCardData = newTestCardData
+    }
+
+
+
+
+
+
+
+
+    @action
+    initialiseStoreData = async () => {
+
+        // let courseIds = []      // TODO i will use this code
+        // map(item.metaData.courseSyllabusIds, (element) => {
+        //   courseIds.push(element.courseId)
+        // })
+
+        // let urlParams = { id: item.id, courseId: courseIds.join(','), type: item.type }
+        // const config = { methodType: 'POST' }
+        // const homePageApiModule = new HomeNetworkModule(config, this)
+        // await homePageApiModule.getConceptChepterRelatedTopic(urlParams)
+        // await homePageApiModule.getConceptChapterRelatedSummaryCard(urlParams)
+        const testCardDummyData = {
+            chapter: [
+                {
+                    _id: "5b1295620754a72f1e5f664a",
+                    course: {
+                        _id: "5eb58844fb79f919d0f12f4f",
+                        name: "JEE(A)-2023"
+                    },
+                    test: {
+                        id: "5b1293a00754a72f1e5f891c",
+                        name: "JEE-M-1617-CHEM-% composition of free SO3 in oleum",
+                        type: "chapter",
+                        typeName: "Chapter Test",
+                        duration: 20
+                    }
+                },
+                {
+                    _id: "5b1295620754a72f1e5f664a",
+                    course: {
+                        _id: "5eb58844fb79f919d0f12f4f",
+                        name: "JEE(A)-2023"
+                    },
+                    test: {
+                        id: "5b1293a00754a72f1e5f891m",//c
+                        name: "JEE-M-1617-CHEM-% composition of free SO3 in oleum",
+                        type: "concept",
+                        typeName: "Concept Test",
+                        duration: 20
+                    }
+                }
+            ],
+            concept: [
+                {
+                    _id: "5b1295620754a72f1e5f664a",
+                    course: {
+                        _id: "5eb58844fb79f919d0f12f4f",
+                        name: "JEE(A)-2023"
+                    },
+                    test: {
+                        id: "5b1293a00754a72f1e5f891n",//c
+                        name: "JEE-M-1617-CHEM-% composition of free SO3 in oleum",
+                        type: "concept",
+                        typeName: "Concept Test",
+                        duration: 20
+                    }
+                }
+            ],
+            others: [
+                {
+                    _id: "5b1293a00754a72f1e5f631b",
+                    course: {
+                        _id: "5eb58844fb79f919d0f12f4f",
+                        name: "JEE(A)-2023"
+                    },
+                    test: {
+                        id: "5b1293a00754a72f1e5f891o",//c
+                        name: "JEEM-CP-Physics- Alternating Current",
+                        type: "sample",
+                        typeName: "Sample Test",
+                        duration: 20
+                    }
+                },
+                {
+                    _id: "5b1294ba0754a72f1e5f64e1",
+                    course: {
+                        _id: "5eb58844fb79f919d0f12f4f",
+                        name: "JEE(A)-2023"
+                    },
+                    test: {
+                        id: "5b1293a00754a72f1e5f891p",//c
+                        name: "NTSE- ORBITAL VELOCITY -concept",
+                        type: "sample",
+                        typeName: "Sample Test",
+                        duration: 20
+                    }
+                }
+            ],
+            count: 3,
+            type: "chapter"
+        }
+        // log('shashi=000001',testCardDummyData.chapter.length)
+        forEach(testCardDummyData.chapter, element => {
+            element['selected'] = false
+        });
+        forEach(testCardDummyData.concept, element => {
+            element['selected'] = false
+        });
+        forEach(testCardDummyData.others, element => {
+            element['selected'] = false
+        });
+        this.testCardData = testCardDummyData
+        // -----------------------------------------------
+
+        const testCardFullData = {
+            test: {
+                type: "full",
+                name: "Test assign",
+                id: "62861c43d1907940eb797bee",
+                courseIds: [
+                    "5eb5852f2b60de563f35fb66",
+                    "5eb5852f2b60de563f35fb67"
+                ],
+                typeDisplayName: "Main Test"
+            },
+            paperAttempts: {
+                id1: [
+                    {
+                        batchId: "5eff8e5c1a9775afbc7ae61c",
+                        batchName: "RCMCF2024B1W",
+                        avgScore: 5,
+                        totalStudents: 1,
+                        totalAttemptsCount: 1
+                    },
+                    {
+                        batchId: "5eff8e5c1a9775afbc7ae61d",
+                        batchName: "RCMCF2024B2W",
+                        totalStudents: 6,
+                        totalAttemptsCount: 0
+                    }
+                ]
+                // id2: [
+                //     {
+                //         batchId: "5eff8e5c1a9775afbc7ae61d",
+                //         batchName: "RCMCF2024B2W",
+                //         totalStudents: 6,
+                //         totalAttemptsCount: 0
+                //     }
+                // ]
+            }
+        }
+
+        const finalData = this.constructTableData(testCardFullData.paperAttempts.id1, null)
+        // this.testCardTableData = finalData
+
+        const relatedSearchTopic = {
+            data: {
+                serverTime: 1629868521122,
+                count: 2,
+                relatedTopics: [
+                    {
+                        id: "5f699f03058075680d81dae4",
+                        name: "Harmful Microorganisms"
+                    },
+                    {
+                        id: "5ace20309fe7b01d5806bbe2",
+                        name: "General Organic Chemistry"
+                    }
+                ]
+            },
+            code: 200,
+            message: "Related Topics fetched successfully!"
+        }
+
+        this.searchForRelatedTopic = relatedSearchTopic.data.relatedTopics
+
+        setTimeout(() => {
+            this.fetchingStatus = false
+            this.testCardTableData = finalData
+        }, 3000)
+
+        const { userInfoData: { targetExams } } = userDataStore
+        let addAll = { id: '1', name: 'All', isExpired: false, selected: true }
+        let modifiedData = map(targetExams, element => {
+            element.selected = false
+            return element
+        })
+        this.allGoals = [addAll, ...modifiedData]
+    }
+
+
+    constructTableData = (studentsList, openCardValueKey) => {
+        let tableList = []
+        const headerData = GLOBAL_SEARCH_TEST_TABLE_HEADER
+        tableList = this.constructTopAndSlowLearnerTableListData(studentsList, headerData, 0, openCardValueKey)
+        return tableList
+    }
+
+    constructTopAndSlowLearnerTableListData = (list, headerDataArray, startingIndex = 0, openCardValueKey = null) => {
+        //
+        const finalList = map(list, (item, index) => {
+            log("------==========123========------item/list", item.batchName, list)
+            item[GLOBAL_SEARRCH_TEST_TABLE_KEYS.BATCH] = get(item, 'batchName', 'NA')
+            item[GLOBAL_SEARRCH_TEST_TABLE_KEYS.SCHEDULED_WEEK] = get(item, 'proficiency', 'NA')
+            item[GLOBAL_SEARRCH_TEST_TABLE_KEYS.AVG_SCROE] = get(item, 'avgScore', 'NA')
+
+            const finalItem = this.getItemKeyArray(headerDataArray, item, index + startingIndex, openCardValueKey)
+            return finalItem
+        })
+        return finalList
+    }
+    getItemKeyArray = (headerArrayData, item, index, openCardValueKey) => {
+        const finalData = headerArrayData.map((headerData) => {
+
+            let finalKeyItem: any = []
+            const { key, style = {}, valueTextStyle = {} = {}, isTruncated = false, numberOfLines = 0,
+                isClickable = false, valueSuccessor = '', isSearchableProperty = false, showToolTip = false } = headerData
+
+            if (typeof (key) === 'object') {
+                const valueKey = key[0]
+                const subValueKey = key[1]
+                finalKeyItem.push({
+                    key: key,
+                    value: item[valueKey],
+                    subValue: item[subValueKey],
+                    style: style,
+                    isSearchableProperty: isSearchableProperty,
+                    isTruncated: isTruncated,
+                    numberOfLines: numberOfLines,
+                    showToolTip
+                })
+            }
+
+            else {
+                let value = item[key] !== "NA" ? item[key] + valueSuccessor : item[key]
+                finalKeyItem.push({
+                    key: key,
+                    value: value,
+                    style: style,
+                    isSearchableProperty: isSearchableProperty,
+                    isTruncated: isTruncated,
+                    numberOfLines: numberOfLines,
+                    showToolTip
+                })
+            }
+            return finalKeyItem
+        })
+        return flatten(finalData)
+    }
+
+
+    @action
+    changeTargetGoalOption = (id) => {
+        const selectedGoal = map(this.allGoals, item => {
+            if (id === get(item, 'id')) {
+                return {
+                    ...item, selected: true
+                }
+            } else {
+                return {
+                    ...item, selected: false
+                }
+            }
+        })
+        this.allGoals = [...selectedGoal]
+    }
+
+    onSuccess(apiId: string, response) {
+        const responseData = get(response, 'data')
+        switch (apiId) {
+            case API_IDS.GET_CONCEPT_CHAPTER_RELATED_TOPIC:
+                break
+            case API_IDS.GET_CONCEPT_CHAPTER_SUMMARY_CARD:
+            default:
+                break
+        }
+    }
+
+    onSuccessUnAuthorized(apiId: string, _response: any) {
+        // const message = get(response, 'message' )
+    }
+
+    onSuccessBadRequest(apiId: string, _response: any) {
+        // const message = get(response, 'message')
+    }
+
+    onFailure(apiId: string, _request: BaseRequest) {
+
+    }
+
+    validateRequestParams() {
+        return true
+    }
+
+    validateResponseParams(_response: any) {
+        return true
+    }
+
+    generalValidationError(_type: string, _error: string): void {
+        //
+    }
+
+    onComplete() {
+        //
+    }
+}
